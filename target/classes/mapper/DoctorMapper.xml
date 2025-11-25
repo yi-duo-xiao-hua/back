@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.mapper.DoctorMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="DoctorResultMap" type="com.example.hello.entity.Doctor">
+        <id column="doctor_id" property="doctorId"/>
+        <result column="hospital_id" property="hospitalId"/>
+        <result column="name" property="name"/>
+        <result column="department" property="department"/>
+        <result column="title" property="title"/>
+        <result column="specialty" property="specialty"/>
+        <result column="introduction" property="introduction"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="avatar_file_size" property="avatarFileSize"/>
+        <result column="avatar_file_type" property="avatarFileType"/>
+        <result column="avatar_upload_time" property="avatarUploadTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="hospital_name" property="hospitalName"/>
+    </resultMap>
+
+    <!-- 分页查询医生列表 -->
+    <select id="selectDoctorList" resultMap="DoctorResultMap">
+        SELECT
+            d.doctor_id,
+            d.hospital_id,
+            d.name,
+            d.department,
+            d.title,
+            d.specialty,
+            d.avatar_url,
+            d.update_time,
+            h.name AS hospital_name
+        FROM doctors d
+        LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+        <where>
+            <if test="name != null and name != ''">
+                AND d.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="hospitalName != null and hospitalName != ''">
+                AND h.name LIKE CONCAT('%', #{hospitalName}, '%')
+            </if>
+            <if test="department != null and department != ''">
+                AND d.department = #{department}
+            </if>
+            <if test="title != null and title != ''">
+                AND d.title = #{title}
+            </if>
+        </where>
+        ORDER BY d.update_time DESC
+    </select>
+
+    <!-- 根据ID查询医生详情 -->
+    <select id="selectDoctorById" resultMap="DoctorResultMap">
+        SELECT
+            d.doctor_id,
+            d.hospital_id,
+            d.name,
+            d.department,
+            d.title,
+            d.specialty,
+            d.introduction,
+            d.avatar_url,
+            d.avatar_file_size,
+            d.avatar_file_type,
+            d.create_time,
+            d.update_time
+        FROM doctors d
+        WHERE d.doctor_id = #{doctorId}
+    </select>
+
+    <!-- 新增医生 -->
+    <insert id="insertDoctor" parameterType="com.example.hello.entity.Doctor" useGeneratedKeys="true" keyProperty="doctorId">
+        INSERT INTO doctors (
+            hospital_id,
+            name,
+            department,
+            title,
+            specialty,
+            introduction,
+            avatar_url,
+            avatar_file_size,
+            avatar_file_type,
+            avatar_upload_time
+        ) VALUES (
+            #{hospitalId},
+            #{name},
+            #{department},
+            #{title},
+            #{specialty},
+            #{introduction},
+            #{avatarUrl},
+            #{avatarFileSize},
+            #{avatarFileType},
+            #{avatarUploadTime}
+        )
+    </insert>
+
+    <!-- 修改医生 -->
+    <update id="updateDoctor" parameterType="com.example.hello.entity.Doctor">
+        UPDATE doctors
+        <set>
+            <if test="hospitalId != null">hospital_id = #{hospitalId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="department != null and department != ''">department = #{department},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="specialty != null and specialty != ''">specialty = #{specialty},</if>
+            <if test="introduction != null">introduction = #{introduction},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="avatarFileSize != null">avatar_file_size = #{avatarFileSize},</if>
+            <if test="avatarFileType != null">avatar_file_type = #{avatarFileType},</if>
+            <if test="avatarUploadTime != null">avatar_upload_time = #{avatarUploadTime},</if>
+        </set>
+        WHERE doctor_id = #{doctorId}
+    </update>
+
+    <!-- 删除医生 -->
+    <delete id="deleteDoctor">
+        DELETE FROM doctors WHERE doctor_id = #{doctorId}
+    </delete>
+
+    <!-- 检查医院是否存在 -->
+    <select id="checkHospitalExists" resultType="int">
+        SELECT COUNT(1) FROM hospitals WHERE hospital_id = #{hospitalId}
+    </select>
+
+</mapper>
+
