@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.mapper.ScaleMapper">
+
+    <resultMap id="ScaleResultMap" type="com.example.hello.entity.Scale">
+        <id column="scale_id" property="scaleId"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="description" property="description"/>
+        <result column="disease_type" property="diseaseType"/>
+        <result column="question_count" property="questionCount"/>
+        <result column="interpretation_rules" property="interpretationRules"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ScaleResultMap">
+        SELECT
+            scale_id,
+            name,
+            code,
+            description,
+            disease_type,
+            question_count,
+            interpretation_rules,
+            create_time,
+            update_time
+        FROM scales
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" parameterType="int" resultMap="ScaleResultMap">
+        SELECT
+            scale_id,
+            name,
+            code,
+            description,
+            disease_type,
+            question_count,
+            interpretation_rules,
+            create_time,
+            update_time
+        FROM scales
+        WHERE scale_id = #{scaleId}
+    </select>
+
+</mapper>
+
+

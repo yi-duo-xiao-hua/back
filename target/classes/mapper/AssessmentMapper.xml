@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.mapper.AssessmentMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="AssessmentResultMap" type="com.example.hello.entity.Assessment">
+        <id column="assessment_id" property="assessmentId"/>
+        <result column="patient_id" property="patientId"/>
+        <result column="scale_id" property="scaleId"/>
+        <result column="total_score" property="totalScore"/>
+        <result column="assessment_result" property="assessmentResult"/>
+        <result column="assessment_date" property="assessmentDate"/>
+        <result column="answers" property="answers" jdbcType="VARCHAR"/>
+        <result column="recommendation" property="recommendation"/>
+        <result column="scale_name" property="scaleName"/>
+    </resultMap>
+
+    <!-- 根据患者ID查询所有评估记录 -->
+    <select id="selectByPatientId" resultMap="AssessmentResultMap">
+        SELECT
+            a.assessment_id,
+            a.patient_id,
+            a.scale_id,
+            a.total_score,
+            a.assessment_result,
+            a.assessment_date,
+            a.answers,
+            a.recommendation,
+            s.name AS scale_name
+        FROM assessments a
+        LEFT JOIN scales s ON a.scale_id = s.scale_id
+        WHERE a.patient_id = #{patientId}
+        ORDER BY a.assessment_date DESC
+    </select>
+
+    <!-- 根据评估记录ID查询详情 -->
+    <select id="selectByAssessmentId" resultMap="AssessmentResultMap">
+        SELECT
+            a.assessment_id,
+            a.patient_id,
+            a.scale_id,
+            a.total_score,
+            a.assessment_result,
+            a.assessment_date,
+            a.answers,
+            a.recommendation,
+            s.name AS scale_name
+        FROM assessments a
+        LEFT JOIN scales s ON a.scale_id = s.scale_id
+        WHERE a.assessment_id = #{assessmentId}
+    </select>
+
+    <insert id="insertAssessment" parameterType="com.example.hello.entity.Assessment"
+            useGeneratedKeys="true" keyProperty="assessmentId">
+        INSERT INTO assessments
+        (
+        patient_id,
+        scale_id,
+        total_score,
+        assessment_result,
+        answers,
+        recommendation
+        )
+        VALUES
+        (
+        #{patientId},
+        #{scaleId},
+        #{totalScore},
+        #{assessmentResult},
+        #{answers,jdbcType=LONGVARCHAR},
+        #{recommendation}
+        )
+    </insert>
+
+</mapper>
+

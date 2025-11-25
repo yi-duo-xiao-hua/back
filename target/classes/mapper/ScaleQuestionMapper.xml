@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.mapper.ScaleQuestionMapper">
+
+    <resultMap id="ScaleQuestionResultMap" type="com.example.hello.entity.ScaleQuestion">
+        <id column="question_id" property="questionId"/>
+        <result column="scale_id" property="scaleId"/>
+        <result column="question_number" property="questionNumber"/>
+        <result column="question_text" property="questionText"/>
+        <result column="option_type" property="optionType"/>
+        <result column="options" property="options"/>
+        <result column="weight" property="weight"/>
+    </resultMap>
+
+    <select id="selectByScaleId" parameterType="int" resultMap="ScaleQuestionResultMap">
+        SELECT
+            question_id,
+            scale_id,
+            question_number,
+            question_text,
+            option_type,
+            options,
+            weight
+        FROM scale_questions
+        WHERE scale_id = #{scaleId}
+        ORDER BY question_number ASC
+    </select>
+
+</mapper>
+
+
