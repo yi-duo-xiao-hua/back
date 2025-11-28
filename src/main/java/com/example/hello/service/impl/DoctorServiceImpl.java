@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Service
 public class DoctorServiceImpl implements DoctorService {
 
-    private static final long MAX_AVATAR_SIZE = 2 * 1024 * 1024L;
     private static final Set<String> ALLOWED_TYPES = Set.of("image/png", "image/jpeg", "image/jpg");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg");
 
@@ -254,10 +253,6 @@ public class DoctorServiceImpl implements DoctorService {
         if (contentType == null || ALLOWED_TYPES.stream()
                 .noneMatch(allowed -> allowed.equalsIgnoreCase(contentType))) {
             return Result.error("格式错误，上传失败");
-        }
-        long fileSize = file.getSize();
-        if (fileSize > MAX_AVATAR_SIZE) {
-            return Result.error("图片过大，上传失败");
         }
         if (!isAllowedExtension(file.getOriginalFilename())) {
             return Result.error("格式错误，上传失败");
