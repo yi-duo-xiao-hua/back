@@ -125,5 +125,15 @@
         SELECT COUNT(1) FROM hospitals WHERE hospital_id = #{hospitalId}
     </select>
 
+    <!-- 清空医生头像 -->
+    <update id="clearDoctorAvatar">
+        UPDATE doctors
+        SET avatar_url = NULL,
+            avatar_file_size = NULL,
+            avatar_file_type = NULL,
+            avatar_upload_time = NULL
+        WHERE doctor_id = #{doctorId}
+    </update>
+
 </mapper>
 

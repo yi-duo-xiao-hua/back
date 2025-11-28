@@ -1,4 +1,5 @@
 /home/devbox/project/src/main/java/com/example/hello/HelloApplication.java
+/home/devbox/project/src/main/java/com/example/hello/common/ObjectStorageProperties.java
 /home/devbox/project/src/main/java/com/example/hello/common/Result.java
 /home/devbox/project/src/main/java/com/example/hello/common/UserContext.java
 /home/devbox/project/src/main/java/com/example/hello/common/validation/Gender.java
@@ -37,9 +38,11 @@
 /home/devbox/project/src/main/java/com/example/hello/mapper/ScaleQuestionMapper.java
 /home/devbox/project/src/main/java/com/example/hello/service/DoctorService.java
 /home/devbox/project/src/main/java/com/example/hello/service/HospitalService.java
+/home/devbox/project/src/main/java/com/example/hello/service/ObjectStorageService.java
 /home/devbox/project/src/main/java/com/example/hello/service/PatientService.java
 /home/devbox/project/src/main/java/com/example/hello/service/ScaleService.java
 /home/devbox/project/src/main/java/com/example/hello/service/impl/DoctorServiceImpl.java
 /home/devbox/project/src/main/java/com/example/hello/service/impl/HospitalServiceImpl.java
+/home/devbox/project/src/main/java/com/example/hello/service/impl/ObjectStorageServiceImpl.java
 /home/devbox/project/src/main/java/com/example/hello/service/impl/PatientServiceImpl.java
 /home/devbox/project/src/main/java/com/example/hello/service/impl/ScaleServiceImpl.java

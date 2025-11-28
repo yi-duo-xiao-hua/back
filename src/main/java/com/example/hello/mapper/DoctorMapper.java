@@ -43,5 +43,10 @@ public interface DoctorMapper {
      * 检查医院是否存在
      */
     int checkHospitalExists(Integer hospitalId);
+
+    /**
+     * 清空医生头像
+     */
+    int clearDoctorAvatar(Integer doctorId);
 }
 

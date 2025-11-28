@@ -1,26 +1,26 @@
 package com.example.hello.service.impl;
 
 import com.example.hello.common.Result;
+import com.example.hello.common.ObjectStorageProperties;
 import com.example.hello.dto.*;
 import com.example.hello.entity.Doctor;
 import com.example.hello.mapper.DoctorMapper;
 import com.example.hello.service.DoctorService;
+import com.example.hello.service.ObjectStorageService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -30,11 +30,18 @@ import java.util.stream.Collectors;
 @Service
 public class DoctorServiceImpl implements DoctorService {
 
+    private static final long MAX_AVATAR_SIZE = 2 * 1024 * 1024L;
+    private static final Set<String> ALLOWED_TYPES = Set.of("image/png", "image/jpeg", "image/jpg");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg");
+
     @Autowired
     private DoctorMapper doctorMapper;
 
-    @Value("${file.upload.path:/uploads/doctors}")
-    private String uploadPath;
+    @Autowired
+    private ObjectStorageService objectStorageService;
+
+    @Autowired
+    private ObjectStorageProperties storageProperties;
 
     @Override
     public Result<PageResult<DoctorListVO>> getDoctorList(DoctorQueryDTO queryDTO) {
@@ -152,6 +159,9 @@ public class DoctorServiceImpl implements DoctorService {
             return Result.error("医生不存在");
         }
 
+        // 删除头像文件
+        deleteAvatarObjectIfExists(doctor.getAvatarUrl());
+
         int result = doctorMapper.deleteDoctor(doctorId);
         if (result > 0) {
             return Result.success("删除成功", null);
@@ -163,63 +173,60 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result<AvatarUploadVO> uploadAvatar(MultipartFile file, Integer doctorId) {
-        // 校验文件
-        if (file == null || file.isEmpty()) {
-            return Result.error("文件不能为空");
+        Result<AvatarUploadVO> validationError = validateUploadParams(file, doctorId);
+        if (validationError != null) {
+            return validationError;
         }
 
-        // 校验文件类型
+        Doctor doctor = doctorMapper.selectDoctorById(doctorId);
+        if (doctor == null) {
+            return Result.error("医生信息不存在");
+        }
+
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            return Result.error("格式错误，上传失败");
-        }
-
-        // 校验文件大小（10MB）
+        String originalFilename = file.getOriginalFilename();
+        String extension = resolveExtension(originalFilename);
         long fileSize = file.getSize();
-        if (fileSize > 10 * 1024 * 1024) {
-            return Result.error("图片过大，上传失败");
-        }
 
-        try {
-            // 生成文件名
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String fileName = "avatar_" + UUID.randomUUID().toString().replace("-", "") + extension;
+        String objectKey = storageProperties.buildObjectKey(
+                "avatar_" + doctorId + "_" + UUID.randomUUID().toString().replace("-", "") + extension);
 
-            // 创建上传目录
-            Path uploadDir = Paths.get(uploadPath);
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
+        try (InputStream inputStream = file.getInputStream()) {
+            // 上传到对象存储
+            String avatarUrl = objectStorageService.upload(objectKey, inputStream, fileSize, contentType);
 
-            // 保存文件
-            Path filePath = uploadDir.resolve(fileName);
-            Files.write(filePath, file.getBytes());
+            // 删除旧头像
+            deleteAvatarObjectIfExists(doctor.getAvatarUrl());
 
-            // 生成访问路径
-            String avatarUrl = "/uploads/doctors/" + fileName;
+            // 更新医生头像信息
+            Doctor updateDoctor = new Doctor();
+            updateDoctor.setDoctorId(doctorId);
+            updateDoctor.setAvatarUrl(avatarUrl);
+            updateDoctor.setAvatarFileSize((int) fileSize);
+            updateDoctor.setAvatarFileType(contentType);
+            updateDoctor.setAvatarUploadTime(LocalDateTime.now());
+            doctorMapper.updateDoctor(updateDoctor);
 
-            // 如果提供了doctorId，更新医生信息
-            if (doctorId != null) {
-                Doctor doctor = doctorMapper.selectDoctorById(doctorId);
-                if (doctor != null) {
-                    doctor.setAvatarUrl(avatarUrl);
-                    doctor.setAvatarFileSize((int) fileSize);
-                    doctor.setAvatarFileType(contentType);
-                    doctor.setAvatarUploadTime(LocalDateTime.now());
-                    doctorMapper.updateDoctor(doctor);
-                }
-            }
-
-            AvatarUploadVO vo = new AvatarUploadVO(avatarUrl, originalFilename, fileSize);
+            AvatarUploadVO vo = new AvatarUploadVO(avatarUrl, originalFilename, fileSize, contentType);
             return Result.success("上传成功", vo);
-
-        } catch (IOException e) {
-            return Result.error("上传失败：" + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("上传失败，请重试");
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Void> deleteAvatar(Integer doctorId) {
+        if (doctorId == null) {
+            return Result.error("医生ID不能为空");
+        }
+        Doctor doctor = doctorMapper.selectDoctorById(doctorId);
+        if (doctor == null) {
+            return Result.error("医生不存在");
+        }
+        deleteAvatarObjectIfExists(doctor.getAvatarUrl());
+        doctorMapper.clearDoctorAvatar(doctorId);
+        return Result.success("头像删除成功", null);
     }
 
     /**
@@ -234,6 +241,75 @@ public class DoctorServiceImpl implements DoctorService {
             return url.substring(lastIndex + 1);
         }
         return url;
+    }
+
+    private Result<AvatarUploadVO> validateUploadParams(MultipartFile file, Integer doctorId) {
+        if (doctorId == null) {
+            return Result.error("医生ID不能为空");
+        }
+        if (file == null || file.isEmpty()) {
+            return Result.error("文件不能为空");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || ALLOWED_TYPES.stream()
+                .noneMatch(allowed -> allowed.equalsIgnoreCase(contentType))) {
+            return Result.error("格式错误，上传失败");
+        }
+        long fileSize = file.getSize();
+        if (fileSize > MAX_AVATAR_SIZE) {
+            return Result.error("图片过大，上传失败");
+        }
+        if (!isAllowedExtension(file.getOriginalFilename())) {
+            return Result.error("格式错误，上传失败");
+        }
+        return null;
+    }
+
+    private String resolveExtension(String filename) {
+        if (!StringUtils.hasText(filename) || !filename.contains(".")) {
+            return ".jpg";
+        }
+        String ext = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            return ".jpg";
+        }
+        return "." + ext;
+    }
+
+    private boolean isAllowedExtension(String filename) {
+        if (!StringUtils.hasText(filename) || !filename.contains(".")) {
+            return false;
+        }
+        String ext = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        return ALLOWED_EXTENSIONS.contains(ext);
+    }
+
+    private void deleteAvatarObjectIfExists(String avatarUrl) {
+        String objectKey = extractObjectKey(avatarUrl);
+        if (StringUtils.hasText(objectKey)) {
+            objectStorageService.delete(objectKey);
+        }
+    }
+
+    private String extractObjectKey(String avatarUrl) {
+        if (!StringUtils.hasText(avatarUrl)) {
+            return null;
+        }
+        String marker = "/" + storageProperties.getBucket() + "/";
+        int idx = avatarUrl.indexOf(marker);
+        if (idx >= 0) {
+            return avatarUrl.substring(idx + marker.length());
+        }
+        if (avatarUrl.startsWith("http")) {
+            int schemaIdx = avatarUrl.indexOf("://");
+            if (schemaIdx > 0) {
+                int pathIdx = avatarUrl.indexOf('/', schemaIdx + 3);
+                if (pathIdx > 0 && pathIdx < avatarUrl.length() - 1) {
+                    return avatarUrl.substring(pathIdx + 1);
+                }
+            }
+        }
+        return avatarUrl.replaceFirst("^/+", "");
     }
 }
 

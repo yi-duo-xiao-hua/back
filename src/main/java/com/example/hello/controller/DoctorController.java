@@ -64,8 +64,16 @@ public class DoctorController {
     @PostMapping("/avatar/upload")
     public Result<AvatarUploadVO> uploadAvatar(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "doctorId", required = false) Integer doctorId) {
+            @RequestParam("doctorId") Integer doctorId) {
         return doctorService.uploadAvatar(file, doctorId);
+    }
+
+    /**
+     * 删除医生头像
+     */
+    @DeleteMapping("/{id}/avatar")
+    public Result<Void> deleteAvatar(@PathVariable("id") Integer doctorId) {
+        return doctorService.deleteAvatar(doctorId);
     }
 }
 
