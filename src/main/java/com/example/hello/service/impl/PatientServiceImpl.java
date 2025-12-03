@@ -3,6 +3,7 @@ package com.example.hello.service.impl;
 import com.example.hello.common.Result;
 import com.example.hello.common.UserContext;
 import com.example.hello.dto.AssessmentDetailVO;
+import com.example.hello.dto.PatientInitDTO;
 import com.example.hello.dto.PatientProfileVO;
 import com.example.hello.dto.PatientUpdateDTO;
 import com.example.hello.entity.Assessment;
@@ -13,14 +14,14 @@ import com.example.hello.service.PatientService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -209,6 +210,50 @@ public class PatientServiceImpl implements PatientService {
         }
 
         return answerList;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Map<String, Integer>> initPatientInfo(PatientInitDTO patientInitDTO) {
+        Integer userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录");
+        }
+
+        Patient exist = patientMapper.selectByUserId(userId);
+        if (exist != null) {
+            return Result.error("该用户已存在患者档案");
+        }
+
+        if (patientInitDTO.getGender() == null || (patientInitDTO.getGender() != 1 && patientInitDTO.getGender() != 2)) {
+            return Result.error("性别参数错误");
+        }
+
+        int idCardCount = patientMapper.countByIdCard(patientInitDTO.getIdCard());
+        if (idCardCount > 0) {
+            return Result.error("身份证号已被其他患者使用");
+        }
+
+        LocalDate birthDate;
+        try {
+            birthDate = LocalDate.parse(patientInitDTO.getBirthDate(), DATE_FORMATTER);
+        } catch (Exception e) {
+            return Result.error("出生日期格式错误");
+        }
+
+        Patient patient = new Patient();
+        patient.setUserId(userId);
+        patient.setName(patientInitDTO.getName());
+        patient.setGender(patientInitDTO.getGender());
+        patient.setBirthDate(birthDate);
+        patient.setIdCard(patientInitDTO.getIdCard());
+        patient.setMedicalHistoryRemark(patientInitDTO.getMedicalHistoryRemark());
+
+        patientMapper.insertPatient(patient);
+
+        Map<String, Integer> response = new HashMap<>();
+        response.put("patientId", patient.getPatientId());
+        return Result.success("患者信息初始化成功", response);
     }
 }
 

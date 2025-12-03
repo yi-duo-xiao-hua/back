@@ -27,5 +27,15 @@ public interface PatientMapper {
      * 检查患者是否存在
      */
     int checkPatientExists(Integer patientId);
+
+    /**
+     * 新增患者
+     */
+    int insertPatient(Patient patient);
+
+    /**
+     * 根据身份证统计数量
+     */
+    int countByIdCard(String idCard);
 }
 

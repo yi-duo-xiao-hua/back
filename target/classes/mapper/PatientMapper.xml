@@ -65,5 +65,30 @@
         SELECT COUNT(1) FROM patients WHERE patient_id = #{patientId}
     </select>
 
+    <!-- 新增患者 -->
+    <insert id="insertPatient" parameterType="com.example.hello.entity.Patient" useGeneratedKeys="true"
+            keyProperty="patientId">
+        INSERT INTO patients (
+            user_id,
+            name,
+            gender,
+            birth_date,
+            id_card,
+            medical_history_remark
+        ) VALUES (
+            #{userId},
+            #{name},
+            #{gender},
+            #{birthDate},
+            #{idCard},
+            #{medicalHistoryRemark}
+        )
+    </insert>
+
+    <!-- 根据身份证统计数量 -->
+    <select id="countByIdCard" resultType="int">
+        SELECT COUNT(1) FROM patients WHERE id_card = #{idCard}
+    </select>
+
 </mapper>
 

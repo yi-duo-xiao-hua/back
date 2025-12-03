@@ -2,8 +2,11 @@ package com.example.hello.service;
 
 import com.example.hello.common.Result;
 import com.example.hello.dto.AssessmentDetailVO;
+import com.example.hello.dto.PatientInitDTO;
 import com.example.hello.dto.PatientProfileVO;
 import com.example.hello.dto.PatientUpdateDTO;
+
+import java.util.Map;
 
 /**
  * 患者服务接口
@@ -23,5 +26,10 @@ public interface PatientService {
      * 根据评估记录ID获取详情
      */
     Result<AssessmentDetailVO> getAssessmentDetail(Integer assessmentId);
+
+    /**
+     * 初始化患者信息
+     */
+    Result<Map<String, Integer>> initPatientInfo(PatientInitDTO patientInitDTO);
 }
 

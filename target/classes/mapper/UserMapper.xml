@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.example.hello.entity.User">
+        <id column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="last_login" property="lastLogin"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectByUsername" parameterType="string" resultMap="UserResultMap">
+        SELECT user_id, username, password_hash, last_login, create_time
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <select id="selectById" parameterType="int" resultMap="UserResultMap">
+        SELECT user_id, username, password_hash, last_login, create_time
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insertUser" parameterType="com.example.hello.entity.User" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (username, password_hash)
+        VALUES (#{username}, #{passwordHash})
+    </insert>
+
+    <update id="updateLastLogin">
+        UPDATE users
+        SET last_login = #{lastLogin}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
+

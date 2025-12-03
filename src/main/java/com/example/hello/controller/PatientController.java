@@ -2,12 +2,15 @@ package com.example.hello.controller;
 
 import com.example.hello.common.Result;
 import com.example.hello.dto.AssessmentDetailVO;
+import com.example.hello.dto.PatientInitDTO;
 import com.example.hello.dto.PatientProfileVO;
 import com.example.hello.dto.PatientUpdateDTO;
 import com.example.hello.service.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * 患者管理控制器
@@ -46,6 +49,14 @@ public class PatientController {
     @GetMapping("/assessments/{id}")
     public Result<AssessmentDetailVO> getAssessmentDetail(@PathVariable("id") Integer assessmentId) {
         return patientService.getAssessmentDetail(assessmentId);
+    }
+
+    /**
+     * 初始化患者信息
+     */
+    @PostMapping("/patients/init")
+    public Result<Map<String, Integer>> initPatient(@Valid @RequestBody PatientInitDTO patientInitDTO) {
+        return patientService.initPatientInfo(patientInitDTO);
     }
 }
 
