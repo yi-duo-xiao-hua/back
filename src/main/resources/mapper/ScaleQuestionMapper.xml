@@ -8,7 +8,7 @@
         <result column="question_number" property="questionNumber"/>
         <result column="question_text" property="questionText"/>
         <result column="option_type" property="optionType"/>
-        <result column="options" property="options"/>
+        <result column="options" property="options" jdbcType="LONGVARCHAR" javaType="java.lang.String"/>
         <result column="weight" property="weight"/>
     </resultMap>
 
@@ -19,7 +19,7 @@
             question_number,
             question_text,
             option_type,
-            options,
+            JSON_UNQUOTE(options) AS options,
             weight
         FROM scale_questions
         WHERE scale_id = #{scaleId}

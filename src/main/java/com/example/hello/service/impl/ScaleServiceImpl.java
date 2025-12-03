@@ -14,8 +14,8 @@ import com.example.hello.mapper.PatientMapper;
 import com.example.hello.mapper.ScaleMapper;
 import com.example.hello.mapper.ScaleQuestionMapper;
 import com.example.hello.service.ScaleService;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -222,7 +222,35 @@ public class ScaleServiceImpl implements ScaleService {
             return Collections.emptyList();
         }
         try {
-            return objectMapper.readValue(optionsJson, new TypeReference<List<ScaleDetailVO.QuestionVO.OptionVO>>() {});
+            JsonNode root = objectMapper.readTree(optionsJson);
+            if (root == null) {
+                return Collections.emptyList();
+            }
+            JsonNode optionsNode = root;
+            if (root.isObject() && root.has("options")) {
+                optionsNode = root.get("options");
+            }
+            if (optionsNode == null || !optionsNode.isArray()) {
+                return Collections.emptyList();
+            }
+            List<ScaleDetailVO.QuestionVO.OptionVO> options = new ArrayList<>();
+            optionsNode.forEach(node -> {
+                ScaleDetailVO.QuestionVO.OptionVO optionVO = new ScaleDetailVO.QuestionVO.OptionVO();
+                optionVO.setText(node.path("text").asText(null));
+                if (node.has("value")) {
+                    if (node.get("value").isNumber()) {
+                        optionVO.setValue(node.get("value").asInt());
+                    } else {
+                        try {
+                            optionVO.setValue(Integer.parseInt(node.get("value").asText()));
+                        } catch (NumberFormatException e) {
+                            optionVO.setValue(null);
+                        }
+                    }
+                }
+                options.add(optionVO);
+            });
+            return options;
         } catch (Exception e) {
             return Collections.emptyList();
         }
