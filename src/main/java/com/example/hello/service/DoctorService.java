@@ -36,5 +36,10 @@ public interface DoctorService {
      * 上传医生头像
      */
     Result<AvatarUploadVO> uploadAvatar(org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * 根据病症推荐医生
+     */
+    Result<DoctorRecommendationVO> recommendByDisease(String disease, Integer page, Integer pageSize);
 }
 

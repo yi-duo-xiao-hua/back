@@ -11,6 +11,11 @@ public class Assessment {
     private Integer scaleId;
     private Integer totalScore;
     private String assessmentResult;
+    private Integer depressionScore;
+    private Integer schizophreniaScore;
+    private Integer anxietyScore;
+    private Integer insomniaScore;
+    private Integer obsessiveScore;
     private LocalDateTime assessmentDate;
     private String answers; // JSON格式存储
     private String recommendation;
@@ -62,6 +67,46 @@ public class Assessment {
 
     public void setAssessmentResult(String assessmentResult) {
         this.assessmentResult = assessmentResult;
+    }
+
+    public Integer getDepressionScore() {
+        return depressionScore;
+    }
+
+    public void setDepressionScore(Integer depressionScore) {
+        this.depressionScore = depressionScore;
+    }
+
+    public Integer getSchizophreniaScore() {
+        return schizophreniaScore;
+    }
+
+    public void setSchizophreniaScore(Integer schizophreniaScore) {
+        this.schizophreniaScore = schizophreniaScore;
+    }
+
+    public Integer getAnxietyScore() {
+        return anxietyScore;
+    }
+
+    public void setAnxietyScore(Integer anxietyScore) {
+        this.anxietyScore = anxietyScore;
+    }
+
+    public Integer getInsomniaScore() {
+        return insomniaScore;
+    }
+
+    public void setInsomniaScore(Integer insomniaScore) {
+        this.insomniaScore = insomniaScore;
+    }
+
+    public Integer getObsessiveScore() {
+        return obsessiveScore;
+    }
+
+    public void setObsessiveScore(Integer obsessiveScore) {
+        this.obsessiveScore = obsessiveScore;
     }
 
     public LocalDateTime getAssessmentDate() {

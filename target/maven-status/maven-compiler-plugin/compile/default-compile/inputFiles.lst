@@ -16,11 +16,16 @@
 /home/devbox/project/src/main/java/com/example/hello/dto/AssessmentResultVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/AssessmentSubmitDTO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/AvatarUploadVO.java
+/home/devbox/project/src/main/java/com/example/hello/dto/ComprehensiveAssessmentDetailVO.java
+/home/devbox/project/src/main/java/com/example/hello/dto/ComprehensiveAssessmentResultVO.java
+/home/devbox/project/src/main/java/com/example/hello/dto/ComprehensiveAssessmentSubmitDTO.java
+/home/devbox/project/src/main/java/com/example/hello/dto/ComprehensiveScaleVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/CurrentUserVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/DoctorDTO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/DoctorDetailVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/DoctorListVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/DoctorQueryDTO.java
+/home/devbox/project/src/main/java/com/example/hello/dto/DoctorRecommendationVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/HospitalVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/InterpretationVO.java
 /home/devbox/project/src/main/java/com/example/hello/dto/LoginRequest.java

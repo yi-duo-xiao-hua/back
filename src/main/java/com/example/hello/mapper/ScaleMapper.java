@@ -20,6 +20,11 @@ public interface ScaleMapper {
      * 根据ID查询量表
      */
     Scale selectById(Integer scaleId);
+
+    /**
+     * 根据编码查询量表
+     */
+    Scale selectByCode(String code);
 }
 
 

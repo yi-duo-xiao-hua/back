@@ -2,7 +2,13 @@ package com.example.hello.service.impl;
 
 import com.example.hello.common.Result;
 import com.example.hello.common.ObjectStorageProperties;
-import com.example.hello.dto.*;
+import com.example.hello.dto.AvatarUploadVO;
+import com.example.hello.dto.DoctorDTO;
+import com.example.hello.dto.DoctorDetailVO;
+import com.example.hello.dto.DoctorListVO;
+import com.example.hello.dto.DoctorQueryDTO;
+import com.example.hello.dto.DoctorRecommendationVO;
+import com.example.hello.dto.PageResult;
 import com.example.hello.entity.Doctor;
 import com.example.hello.mapper.DoctorMapper;
 import com.example.hello.service.DoctorService;
@@ -18,10 +24,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +42,13 @@ public class DoctorServiceImpl implements DoctorService {
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/png", "image/jpeg", "image/jpg");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg");
+    private static final Map<String, List<String>> DISEASE_KEYWORDS = Map.of(
+        "depression", List.of("抑郁"),
+        "schizophrenia", List.of("分裂"),
+        "anxiety", List.of("焦虑"),
+        "insomnia", List.of("失眠", "睡眠"),
+        "obsessive", List.of("强迫")
+    );
 
     @Autowired
     private DoctorMapper doctorMapper;
@@ -193,6 +210,34 @@ public class DoctorServiceImpl implements DoctorService {
         } catch (Exception e) {
             return Result.error("上传失败，请重试");
         }
+    }
+
+    @Override
+    public Result<DoctorRecommendationVO> recommendByDisease(String disease, Integer page, Integer pageSize) {
+        if (disease == null || disease.isBlank()) {
+            return Result.error("病症类型不能为空");
+        }
+        List<String> keywords = DISEASE_KEYWORDS.get(disease.toLowerCase(Locale.ROOT));
+        if (keywords == null || keywords.isEmpty()) {
+            return Result.error("不支持的病症类型");
+        }
+        int pageNum = page == null || page < 1 ? 1 : page;
+        int size = pageSize == null || pageSize < 1 ? 10 : pageSize;
+        PageHelper.startPage(pageNum, size);
+        List<Doctor> doctors = doctorMapper.selectBySpecialtyKeywords(keywords);
+        List<DoctorListVO> rows = doctors.stream().map(doctor -> {
+            DoctorListVO vo = new DoctorListVO();
+            BeanUtils.copyProperties(doctor, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        PageInfo<Doctor> pageInfo = new PageInfo<>(doctors);
+
+        DoctorRecommendationVO vo = new DoctorRecommendationVO();
+        vo.setDisease(disease);
+        vo.setSearchKeywords(keywords);
+        vo.setTotal(pageInfo.getTotal());
+        vo.setRows(rows);
+        return Result.success(vo);
     }
 
     /**

@@ -66,5 +66,15 @@ public class DoctorController {
             @RequestParam("file") MultipartFile file) {
         return doctorService.uploadAvatar(file);
     }
+
+    /**
+     * 根据病症推荐医生
+     */
+    @GetMapping("/recommendation")
+    public Result<DoctorRecommendationVO> recommendDoctors(@RequestParam("disease") String disease,
+                                                           @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                                                           @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
+        return doctorService.recommendByDisease(disease, page, pageSize);
+    }
 }
 

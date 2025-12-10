@@ -9,6 +9,11 @@
         <result column="scale_id" property="scaleId"/>
         <result column="total_score" property="totalScore"/>
         <result column="assessment_result" property="assessmentResult"/>
+        <result column="depression_score" property="depressionScore"/>
+        <result column="schizophrenia_score" property="schizophreniaScore"/>
+        <result column="anxiety_score" property="anxietyScore"/>
+        <result column="insomnia_score" property="insomniaScore"/>
+        <result column="obsessive_score" property="obsessiveScore"/>
         <result column="assessment_date" property="assessmentDate"/>
         <result column="answers" property="answers" jdbcType="VARCHAR"/>
         <result column="recommendation" property="recommendation"/>
@@ -23,6 +28,11 @@
             a.scale_id,
             a.total_score,
             a.assessment_result,
+            a.depression_score,
+            a.schizophrenia_score,
+            a.anxiety_score,
+            a.insomnia_score,
+            a.obsessive_score,
             a.assessment_date,
             a.answers,
             a.recommendation,
@@ -41,6 +51,11 @@
             a.scale_id,
             a.total_score,
             a.assessment_result,
+            a.depression_score,
+            a.schizophrenia_score,
+            a.anxiety_score,
+            a.insomnia_score,
+            a.obsessive_score,
             a.assessment_date,
             a.answers,
             a.recommendation,
@@ -58,6 +73,11 @@
         scale_id,
         total_score,
         assessment_result,
+        depression_score,
+        schizophrenia_score,
+        anxiety_score,
+        insomnia_score,
+        obsessive_score,
         answers,
         recommendation
         )
@@ -67,6 +87,11 @@
         #{scaleId},
         #{totalScore},
         #{assessmentResult},
+        #{depressionScore},
+        #{schizophreniaScore},
+        #{anxietyScore},
+        #{insomniaScore},
+        #{obsessiveScore},
         #{answers,jdbcType=LONGVARCHAR},
         #{recommendation}
         )

@@ -44,6 +44,22 @@
         WHERE scale_id = #{scaleId}
     </select>
 
+    <select id="selectByCode" parameterType="string" resultMap="ScaleResultMap">
+        SELECT
+            scale_id,
+            name,
+            code,
+            description,
+            disease_type,
+            question_count,
+            interpretation_rules,
+            create_time,
+            update_time
+        FROM scales
+        WHERE code = #{code}
+        LIMIT 1
+    </select>
+
 </mapper>
 
 

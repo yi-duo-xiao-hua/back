@@ -125,5 +125,29 @@
         SELECT COUNT(1) FROM hospitals WHERE hospital_id = #{hospitalId}
     </select>
 
+    <!-- 根据擅长关键词匹配医生 -->
+    <select id="selectBySpecialtyKeywords" resultMap="DoctorResultMap">
+        SELECT
+            d.doctor_id,
+            d.hospital_id,
+            d.name,
+            d.department,
+            d.title,
+            d.specialty,
+            d.avatar_url,
+            d.update_time,
+            h.name AS hospital_name
+        FROM doctors d
+        LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+        <where>
+            <if test="keywords != null and keywords.size() > 0">
+                <foreach collection="keywords" item="kw" separator=" OR ">
+                    d.specialty LIKE CONCAT('%', #{kw}, '%')
+                </foreach>
+            </if>
+        </where>
+        ORDER BY d.update_time DESC
+    </select>
+
 </mapper>
 

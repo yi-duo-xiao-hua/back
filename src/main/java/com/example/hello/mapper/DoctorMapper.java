@@ -44,5 +44,10 @@ public interface DoctorMapper {
      */
     int checkHospitalExists(Integer hospitalId);
 
+    /**
+     * 根据擅长关键词模糊匹配医生
+     */
+    List<Doctor> selectBySpecialtyKeywords(@Param("keywords") List<String> keywords);
+
 }
 
