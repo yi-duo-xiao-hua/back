@@ -171,15 +171,10 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<AvatarUploadVO> uploadAvatar(MultipartFile file, Integer doctorId) {
-        Result<AvatarUploadVO> validationError = validateUploadParams(file, doctorId);
+    public Result<AvatarUploadVO> uploadAvatar(MultipartFile file) {
+        Result<AvatarUploadVO> validationError = validateUploadParams(file);
         if (validationError != null) {
             return validationError;
-        }
-
-        Doctor doctor = doctorMapper.selectDoctorById(doctorId);
-        if (doctor == null) {
-            return Result.error("医生信息不存在");
         }
 
         String contentType = file.getContentType();
@@ -187,45 +182,17 @@ public class DoctorServiceImpl implements DoctorService {
         String extension = resolveExtension(originalFilename);
         long fileSize = file.getSize();
 
-        String objectKey = storageProperties.buildObjectKey(
-                "avatar_" + doctorId + "_" + UUID.randomUUID().toString().replace("-", "") + extension);
+        String objectKey = buildAvatarObjectKey(extension);
 
         try (InputStream inputStream = file.getInputStream()) {
-            // 上传到对象存储
             String avatarUrl = objectStorageService.upload(objectKey, inputStream, fileSize, contentType);
-
-            // 删除旧头像
-            deleteAvatarObjectIfExists(doctor.getAvatarUrl());
-
-            // 更新医生头像信息
-            Doctor updateDoctor = new Doctor();
-            updateDoctor.setDoctorId(doctorId);
-            updateDoctor.setAvatarUrl(avatarUrl);
-            updateDoctor.setAvatarFileSize((int) fileSize);
-            updateDoctor.setAvatarFileType(contentType);
-            updateDoctor.setAvatarUploadTime(LocalDateTime.now());
-            doctorMapper.updateDoctor(updateDoctor);
-
             AvatarUploadVO vo = new AvatarUploadVO(avatarUrl, originalFilename, fileSize, contentType);
             return Result.success("上传成功", vo);
+        } catch (IllegalStateException e) {
+            return Result.error("存储服务异常，请稍后重试");
         } catch (Exception e) {
             return Result.error("上传失败，请重试");
         }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> deleteAvatar(Integer doctorId) {
-        if (doctorId == null) {
-            return Result.error("医生ID不能为空");
-        }
-        Doctor doctor = doctorMapper.selectDoctorById(doctorId);
-        if (doctor == null) {
-            return Result.error("医生不存在");
-        }
-        deleteAvatarObjectIfExists(doctor.getAvatarUrl());
-        doctorMapper.clearDoctorAvatar(doctorId);
-        return Result.success("头像删除成功", null);
     }
 
     /**
@@ -242,22 +209,29 @@ public class DoctorServiceImpl implements DoctorService {
         return url;
     }
 
-    private Result<AvatarUploadVO> validateUploadParams(MultipartFile file, Integer doctorId) {
-        if (doctorId == null) {
-            return Result.error("医生ID不能为空");
-        }
+    private Result<AvatarUploadVO> validateUploadParams(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return Result.error("文件不能为空");
+            return Result.error("请选择图片文件");
         }
         String contentType = file.getContentType();
         if (contentType == null || ALLOWED_TYPES.stream()
                 .noneMatch(allowed -> allowed.equalsIgnoreCase(contentType))) {
             return Result.error("格式错误，上传失败");
         }
+        long fileSize = file.getSize();
+        if (fileSize > 2 * 1024 * 1024L) {
+            return Result.error("图片过大，上传失败");
+        }
         if (!isAllowedExtension(file.getOriginalFilename())) {
             return Result.error("格式错误，上传失败");
         }
         return null;
+    }
+
+    private String buildAvatarObjectKey(String extension) {
+        long timestamp = System.currentTimeMillis() / 1000;
+        String randomPart = UUID.randomUUID().toString().replace("-", "").substring(0, 6);
+        return "doctor_avatar_" + timestamp + "_" + randomPart + extension;
     }
 
     private String resolveExtension(String filename) {

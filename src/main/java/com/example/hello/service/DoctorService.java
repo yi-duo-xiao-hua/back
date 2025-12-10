@@ -35,11 +35,6 @@ public interface DoctorService {
     /**
      * 上传医生头像
      */
-    Result<AvatarUploadVO> uploadAvatar(org.springframework.web.multipart.MultipartFile file, Integer doctorId);
-
-    /**
-     * 删除医生头像
-     */
-    Result<Void> deleteAvatar(Integer doctorId);
+    Result<AvatarUploadVO> uploadAvatar(org.springframework.web.multipart.MultipartFile file);
 }
 

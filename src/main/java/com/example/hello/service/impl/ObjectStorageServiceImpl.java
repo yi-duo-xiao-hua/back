@@ -5,14 +5,17 @@ import com.example.hello.service.ObjectStorageService;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import io.minio.UploadObjectArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * 对象存储实现（基于MinIO/S3协议）
@@ -32,7 +35,8 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
     @PostConstruct
     public void init() {
         this.minioClient = MinioClient.builder()
-                .endpoint(properties.getUploadEndpoint())
+                // 按文档说明默认使用外部访问地址；部署在 Sealos Cloud 内部时可改为 internalEndpoint
+                .endpoint(properties.getExternalEndpoint())
                 .credentials(properties.getAccessKey(), properties.getSecretKey())
                 .build();
         ensureBucket();
@@ -55,19 +59,32 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
 
     @Override
     public String upload(String objectKey, InputStream inputStream, long size, String contentType) {
-        try (InputStream stream = inputStream) {
-            PutObjectArgs.Builder builder = PutObjectArgs.builder()
+        Path tempFile = null;
+        try {
+            // 将输入流先落盘为临时文件，再按官方文档使用 uploadObject 上传
+            tempFile = Files.createTempFile("avatar-", ".tmp");
+            Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+            UploadObjectArgs.Builder builder = UploadObjectArgs.builder()
                     .bucket(properties.getBucket())
                     .object(objectKey)
-                    .stream(stream, size, -1);
+                    .filename(tempFile.toString());
             if (contentType != null) {
                 builder.contentType(contentType);
             }
-            minioClient.putObject(builder.build());
+
+            minioClient.uploadObject(builder.build());
             return properties.buildPublicUrl(objectKey);
         } catch (Exception e) {
             log.error("上传对象到存储失败", e);
-            throw new IllegalStateException("上传失败，请重试");
+            throw new IllegalStateException("STORAGE_ERROR", e);
+        } finally {
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (Exception ignore) {
+                }
+            }
         }
     }
 
